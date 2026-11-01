@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Brewline Support — AI Assistant Demo</title>
+<link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="logo">☕</span> Brewline Coffee Supply <span class="pill">demo store</span></div>
+  <nav><a href="/admin">Analytics →</a></nav>
+</header>
+
+<main class="layout">
+  <section class="intro">
+    <h1>Help-center answers in seconds — and a human when it matters.</h1>
+    <p>This assistant answers only from the store's help-center articles, cites its sources,
+      and hands the conversation to a person for order-specific, safety, legal or unknown questions.</p>
+    <h3>Try asking</h3>
+    <div class="chips" id="chips">
+      <button>How long do refunds take?</button>
+      <button>Can I use vinegar to descale?</button>
+      <button>Do you ship to Canada?</button>
+      <button>Which machine is better for lattes?</button>
+      <button>How do I cancel my subscription?</button>
+      <button>Where is my order #48213?</button>
+      <button>Do you sell matcha whisks?</button>
+    </div>
+    <p class="muted" id="mode"></p>
+  </section>
+
+  <section class="chat" aria-label="Support chat">
+    <div class="chat-head">
+      <div><strong>Support assistant</strong><div class="muted small">Answers from 7 help-center articles</div></div>
+      <span class="status" id="status">●</span>
+    </div>
+    <div class="messages" id="messages" aria-live="polite">
+      <div class="msg bot"><div class="bubble">Hi! I can help with shipping, returns, warranty, subscriptions, payments and machine care. What do you need?</div></div>
+    </div>
+    <form class="composer" id="form">
+      <input id="input" autocomplete="off" maxlength="1000" placeholder="Type your question…" aria-label="Your question" />
+      <button type="submit" id="send">Send</button>
+    </form>
+  </section>
+</main>
+
+<script>
+const $ = (s) => document.querySelector(s);
+const messages = $('#messages');
+let sessionId = null;
+const history = [];
+
+function escapeHtml(t) {
+  return t.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+function addMessage(role, html) {
+  const el = document.createElement('div');
+  el.className = `msg ${role}`;
+  el.innerHTML = `<div class="bubble">${html}</div>`;
+  messages.appendChild(el);
+  messages.scrollTop = messages.scrollHeight;
+  return el;
+}
+
+function renderBot(data) {
+  const answer = escapeHtml(data.answer).replace(/\[(\d+)\]/g, '<sup class="cite">$1</sup>');
+  let meta = '';
+  if (data.handoff) {
+    meta += `<div class="handoff">↪ Handed to a human · reason: <code>${data.handoff_reason}</code></div>`;
+  } else if (data.sources.length) {
+    meta += '<div class="sources">' + data.sources.map((s, i) =>
+      `<span class="src"><b>${i + 1}</b> ${escapeHtml(s.title)} › ${escapeHtml(s.section)}</span>`).join('') + '</div>';
+  }
+  meta += `<div class="meta">confidence ${(data.confidence * 100).toFixed(0)}% · ${data.mode}
+    <span class="fb" data-id="${data.interaction_id}">Helpful? <button data-v="1">👍</button><button data-v="0">👎</button></span></div>`;
+  addMessage('bot', answer + meta);
+}
+
+async function ask(text) {
+  addMessage('user', escapeHtml(text));
+  const typing = addMessage('bot typing', '<span></span><span></span><span></span>');
+  $('#send').disabled = true;
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ message: text, session_id: sessionId, history }),
+    });
+    const data = await res.json();
+    typing.remove();
+    if (!res.ok) throw new Error(data.detail ? JSON.stringify(data.detail) : res.status);
+    sessionId = data.session_id;
+    history.push({ role: 'user', content: text }, { role: 'assistant', content: data.answer });
+    renderBot(data);
+  } catch (e) {
+    typing.remove();
+    addMessage('bot', `<span class="error">Something went wrong (${escapeHtml(String(e.message))}). Please try again.</span>`);
+  } finally {
+    $('#send').disabled = false;
+  }
+}
+
+$('#form').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const text = $('#input').value.trim();
+  if (!text) return;
+  $('#input').value = '';
+  ask(text);
+});
+
+$('#chips').addEventListener('click', (e) => {
+  if (e.target.tagName === 'BUTTON') ask(e.target.textContent);
+});
+
+messages.addEventListener('click', async (e) => {
+  const btn = e.target.closest('.fb button');
+  if (!btn) return;
+  const wrap = btn.parentElement;
+  await fetch('/api/feedback', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ interaction_id: wrap.dataset.id, helpful: btn.dataset.v === '1' }),
+  });
+  wrap.textContent = 'Thanks for the feedback';
+});
+
+fetch('/health').then((r) => r.json()).then((h) => {
+  $('#status').classList.add('ok');
+  $('#mode').textContent = h.mode === 'claude'
+    ? 'Mode: Claude API (generative answers grounded in retrieved articles).'
+    : 'Mode: extractive (no API key set) — answers are the best-matching sentences from the articles.';
+}).catch(() => $('#status').classList.add('down'));
+</script>
+</body>
+</html>

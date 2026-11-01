@@ -1,0 +1,12 @@
+# One-click deploy on Render (free tier): New → Blueprint → select this repo.
+services:
+  - type: web
+    name: rag-support-assistant
+    runtime: docker
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false   # set in the Render dashboard; leave empty for extractive mode
+      - key: CLAUDE_MODEL
+        value: claude-haiku-5-5

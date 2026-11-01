@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Support Assistant — Analytics</title>
+<link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+<header class="topbar">
+  <div class="brand"><span class="logo">☕</span> Support analytics</div>
+  <nav><a href="/">← Back to chat</a></nav>
+</header>
+<main class="admin">
+  <div class="kpis" id="kpis"></div>
+  <div class="grid2">
+    <section class="card"><h3>Why conversations were handed off</h3><div id="reasons"></div></section>
+    <section class="card"><h3>Most-used help articles</h3><div id="sources"></div></section>
+  </div>
+  <section class="card">
+    <h3>Questions the bot could not answer <span class="muted small">→ candidates for new help articles</span></h3>
+    <table id="unanswered"><thead><tr><th>Question (PII redacted)</th><th>Reason</th><th>Times</th></tr></thead><tbody></tbody></table>
+  </section>
+</main>
+<script>
+const pct = (v) => (v === null || v === undefined ? '—' : `${Math.round(v * 100)}%`);
+function bars(el, entries) {
+  const max = Math.max(1, ...entries.map((e) => e[1]));
+  el.innerHTML = entries.length ? entries.map(([k, v]) =>
+    `<div class="bar"><span class="label">${k}</span><span class="track"><span style="width:${(v / max) * 100}%"></span></span><b>${v}</b></div>`).join('')
+    : '<p class="muted">No data yet — ask a few questions in the chat.</p>';
+}
+fetch('/api/analytics').then((r) => r.json()).then((d) => {
+  document.getElementById('kpis').innerHTML = [
+    ['Questions', d.total_questions],
+    ['Automation rate', pct(d.automation_rate)],
+    ['Handoff rate', pct(d.handoff_rate)],
+    ['Rated helpful', pct(d.helpful_rate)],
+    ['Avg. latency', d.avg_latency_ms === null ? '—' : `${d.avg_latency_ms} ms`],
+  ].map(([k, v]) => `<div class="kpi"><div class="muted small">${k}</div><div class="big">${v}</div></div>`).join('');
+  bars(document.getElementById('reasons'), Object.entries(d.handoff_reasons || {}));
+  bars(document.getElementById('sources'), d.top_sources || []);
+  const tbody = document.querySelector('#unanswered tbody');
+  tbody.innerHTML = (d.unanswered_questions || []).map((q) =>
+    `<tr><td>${q.question.replace(/</g, '&lt;')}</td><td><code>${q.handoff_reason}</code></td><td>${q.times}</td></tr>`).join('')
+    || '<tr><td colspan="3" class="muted">Nothing yet.</td></tr>';
+});
+</script>
+</body>
+</html>

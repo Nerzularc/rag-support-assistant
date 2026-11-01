@@ -1,0 +1,32 @@
+{"q": "Do you ship to Canada?", "expect": "shipping#0", "handoff": false}
+{"q": "How much is shipping in the US?", "expect": "shipping#2", "handoff": false}
+{"q": "When will my order arrive if I choose express?", "expect": "shipping#3", "handoff": false}
+{"q": "Will I have to pay customs duties in Australia?", "expect": "shipping#5", "handoff": false}
+{"q": "My grinder arrived damaged, what should I do?", "expect": "shipping#6", "handoff": false}
+{"q": "Can I return opened coffee beans?", "expect": "returns#1", "handoff": false}
+{"q": "How long do refunds take?", "expect": "returns#4", "handoff": false}
+{"q": "Is there a restocking fee for espresso machines?", "expect": "returns#6", "handoff": false}
+{"q": "Can I exchange my kettle for a different color?", "expect": "returns#5", "handoff": false}
+{"q": "How long is the warranty on the espresso machine?", "expect": "warranty#0", "handoff": false}
+{"q": "Does the warranty cover limescale damage?", "expect": "warranty#2", "handoff": false}
+{"q": "How do I make a warranty claim?", "expect": "warranty#3", "handoff": false}
+{"q": "How often do I need to descale to keep the warranty?", "expect": "warranty#4", "handoff": false}
+{"q": "How do I cancel my coffee subscription?", "expect": "subscriptions#3", "handoff": false}
+{"q": "Can I skip a subscription delivery?", "expect": "subscriptions#2", "handoff": false}
+{"q": "How much does the 1 kg subscription bag cost?", "expect": "subscriptions#1", "handoff": false}
+{"q": "Do you accept PayPal?", "expect": "payments-and-orders#0", "handoff": false}
+{"q": "Can I use two discount codes on one order?", "expect": "payments-and-orders#2", "handoff": false}
+{"q": "Do you price match?", "expect": "payments-and-orders#3", "handoff": false}
+{"q": "Can I change my shipping address after ordering?", "expect": "payments-and-orders#1", "handoff": false}
+{"q": "Which machine is better for lattes, Solo or Duo?", "expect": "products-and-care#0", "handoff": false}
+{"q": "Can I use vinegar to descale?", "expect": "products-and-care#2", "handoff": false}
+{"q": "Should I backflush the Solo with detergent?", "expect": "products-and-care#3", "handoff": false}
+{"q": "Can I use distilled water in my machine?", "expect": "products-and-care#4", "handoff": false}
+{"q": "What are your support hours?", "expect": "contact#0", "handoff": false}
+{"q": "Where is my order #48213? It hasn't arrived", "expect": null, "handoff": true}
+{"q": "I want to speak to a human agent", "expect": null, "handoff": true}
+{"q": "My machine started smoking when I turned it on", "expect": null, "handoff": true}
+{"q": "Do you sell matcha whisks?", "expect": null, "handoff": true}
+{"q": "What is the capital of France?", "expect": null, "handoff": true}
+{"q": "I will file a chargeback with my bank", "expect": null, "handoff": true}
+{"q": "Do you have a showroom in New York?", "expect": "contact#2", "handoff": false}
